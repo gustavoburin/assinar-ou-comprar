@@ -1,0 +1,153 @@
+
+######## BR ########
+
+-- Listas Game Pass (sigls)
+All Console Games: 613 produtos
+All PC Games: 519 produtos
+
+-- Busca 'forza' (autosuggest)
+9P8PGC771MLP  Forza Motorsport Premium Edition  (Game)
+9PN4DRJDLZT7  Forza Motorsport Deluxe Edition  (Game)
+9PLKVSWR299F  Forza Motorsport Standard Edition  (Game)
+9N5MZM3J3LCQ  Forza Motorsport Premium Add-Ons Bundle  (Game)
+9MTLKM2DJMZ2  Forza Horizon 5 Edição Suprema  (Game)
+9P1HX37NMJLT  Forza Horizon 5 Edição de Luxo  (Game)
+9NKX70BBCDRN  Forza Horizon 5 Edição Padrão  (Game)
+9MZ0SR207MG8  Pacote de Complementos Supremo do Forza Horizon 5  (Game)
+9P513P4MWC71  Forza Horizon 4 Edição Suprema  (Game)
+9PNJXVCVWD4K  Forza Horizon 4 Edição Padrão  (Game)
+
+-- Jogos: preço de compra, inclusão (preço 0 via Upsell) e desconto de assinante
+9NKX70BBCDRN  Forza Horizon 5 Edição Padrão  kind=Game
+   público=[249.0]  assinante=[]  incluído_em=['Console (legado)', 'PC Game Pass', 'Premium']
+   capas=['BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt']
+9P1HX37NMJLT  Forza Horizon 5 Edição de Luxo  kind=Game
+   público=[309.0]  assinante=[247.2]  incluído_em=[]
+   capas=['BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt']
+9PLKVSWR299F  Forza Motorsport Standard Edition  kind=Game
+   público=[349.0]  assinante=[]  incluído_em=['Console (legado)', 'PC Game Pass', 'Premium']
+   capas=['BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt']
+9NCJSXWZTP88  Starfield  kind=Game
+   público=[248.95]  assinante=[]  incluído_em=['Console (legado)', 'PC Game Pass', 'Premium']
+   capas=['BoxArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt', 'TitledHeroArt']
+9PNCL2R6G8D0  Call of Duty®: Black Ops 6 - Edição Padrão (Windows)  kind=Game
+   público=[]  assinante=[]  incluído_em=[]
+   capas=['BoxArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt', 'TitledHeroArt']
+
+-- Planos (SKUs com preço > 0, como vêm do catálogo)
+Essential:
+   ('1 Mês de Xbox Game Pass Essential', 'BRL', 43.9)
+   ('12 Meses de Xbox Game Pass Essential', 'BRL', 359.9)
+   ('3 Meses de Xbox Game Pass Essential', 'BRL', 114.9)
+   ('6 Meses de Xbox Game Pass Essential', 'BRL', 184.9)
+   ('Avaliação Gratuita de 1 mês do Xbox Live Gold', 'BRL', 43.9)
+Premium:
+   ('1 Mês de Xbox Game Pass Premium', 'BRL', 59.9)
+Ultimate:
+   ('1 Mês de Xbox Game Pass Ultimate', 'BRL', 76.9)
+   ('12 Meses de Xbox Game Pass Ultimate', 'BRL', 922.99)
+   ('2 meses por US$ 2', 'BRL', 76.9)
+   ('24 Meses de Xbox Game Pass Ultimate', 'BRL', 1845.99)
+   ('3 Meses de Xbox Game Pass Ultimate', 'BRL', 229.99)
+   ('6 Meses de Xbox Game Pass Ultimate', 'BRL', 459.99)
+   ('Avaliação gratuita de 14 dias do Ultimate', 'BRL', 76.9)
+   ('Versão de avaliação de 14 dias com renovação ', 'BRL', 76.9)
+   ('Xbox Game Pass Ultimate 12 Months', 'BRL', 922.99)
+   ('Xbox Game Pass Ultimate 3 Months', 'BRL', 229.99)
+   ('Xbox Game Pass Ultimate 6 Months', 'BRL', 459.99)
+PC Game Pass:
+   ('1 Meses de PC Game Pass', 'BRL', 59.99)
+   ('12 meses de PC Game Pass', 'BRL', 719.99)
+   ('3 Meses de PC Game Pass', 'BRL', 179.99)
+   ('Avaliação Gratuita de 14 dias de Jogos para P', 'BRL', 59.99)
+   ('Avaliação de 14 dias com renovação mensal', 'BRL', 59.99)
+   ('Trial Benefit', 'BRL', 59.99)
+Console (legado):
+   ('1 Mês de Console', 'BRL', 32.99)
+   ('12 Meses de Console', 'BRL', 348.0)
+   ('3 Meses de Console', 'BRL', 98.99)
+   ('6 Meses de Console', 'BRL', 197.99)
+   ('Avaliação Gratuita de 1 mês do Xbox Game Pass', 'BRL', 32.99)
+   ('Avaliação Gratuita de 14 dias do Xbox Game Pa', 'BRL', 32.99)
+   ('Avaliação Gratuita de 7 dias do Xbox Game Pas', 'BRL', 32.99)
+
+######## US ########
+
+-- Listas Game Pass (sigls)
+All Console Games: 625 produtos
+All PC Games: 521 produtos
+
+-- Busca 'forza' (autosuggest)
+9P8PGC771MLP  Forza Motorsport Premium Edition  (Game)
+9PN4DRJDLZT7  Forza Motorsport Deluxe Edition  (Game)
+9PLKVSWR299F  Forza Motorsport Standard Edition  (Game)
+9N5MZM3J3LCQ  Forza Motorsport Premium Add-Ons Bundle  (Game)
+9MTLKM2DJMZ2  Forza Horizon 5 Premium Edition  (Game)
+9P1HX37NMJLT  Forza Horizon 5 Deluxe Edition  (Game)
+9NKX70BBCDRN  Forza Horizon 5 Standard Edition  (Game)
+9MZ0SR207MG8  Forza Horizon 5 Premium Add-Ons Bundle  (Game)
+9P513P4MWC71  Forza Horizon 4 Ultimate Edition  (Game)
+9PNJXVCVWD4K  Forza Horizon 4 Standard Edition  (Game)
+
+-- Jogos: preço de compra, inclusão (preço 0 via Upsell) e desconto de assinante
+9NKX70BBCDRN  Forza Horizon 5 Standard Edition  kind=Game
+   público=[59.99]  assinante=[]  incluído_em=['Console (legado)', 'PC Game Pass', 'Premium']
+   capas=['BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt']
+9P1HX37NMJLT  Forza Horizon 5 Deluxe Edition  kind=Game
+   público=[79.99]  assinante=[63.99]  incluído_em=[]
+   capas=['BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt']
+9PLKVSWR299F  Forza Motorsport Standard Edition  kind=Game
+   público=[69.99]  assinante=[]  incluído_em=['Console (legado)', 'PC Game Pass', 'Premium']
+   capas=['BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt']
+9NCJSXWZTP88  Starfield  kind=Game
+   público=[49.99]  assinante=[]  incluído_em=['Console (legado)', 'PC Game Pass', 'Premium']
+   capas=['BoxArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt', 'TitledHeroArt']
+9PNCL2R6G8D0  Call of Duty®: Black Ops 6 - Standard Edition (Windows)  kind=Game
+   público=[]  assinante=[]  incluído_em=[]
+   capas=['BoxArt', 'FeaturePromotionalSquareArt', 'Poster', 'Screenshot', 'SuperHeroArt', 'TitledHeroArt']
+
+-- Planos (SKUs com preço > 0, como vêm do catálogo)
+Essential:
+   ('14 Day Trial Recurs Monthly', 'USD', 1.0)
+   ('14 Day Trial Recurs Monthly', 'USD', 9.99)
+   ('Xbox Game Pass Essential 1 Day', 'USD', 9.99)
+   ('Xbox Game Pass Essential 1 Month', 'USD', 9.99)
+   ('Xbox Game Pass Essential 12 Months', 'USD', 79.99)
+   ('Xbox Game Pass Essential 24 Months', 'USD', 159.98)
+   ('Xbox Game Pass Essential 3 Month', 'USD', 24.99)
+   ('Xbox Game Pass Essential 3 Months', 'USD', 24.99)
+   ('Xbox Game Pass Essential 6 Month', 'USD', 39.99)
+   ('Xbox Game Pass Essential 6 Months', 'USD', 39.99)
+   ('Xbox Live Gold 1 Month Free Trial', 'USD', 9.99)
+Premium:
+   ('Xbox Game Pass Premium 1 Month', 'USD', 1.0)
+   ('Xbox Game Pass Premium 1 Month', 'USD', 14.99)
+Ultimate:
+   ('14 Day Trial Recurs Monthly', 'USD', 22.99)
+   ('2 months for $2', 'USD', 22.99)
+   ('Ultimate 14 Day Free Trial', 'USD', 22.99)
+   ('Xbox Game Pass Ultimate 1 Month', 'USD', 22.99)
+   ('Xbox Game Pass Ultimate 12 Months', 'USD', 275.99)
+   ('Xbox Game Pass Ultimate 24 Months', 'USD', 549.99)
+   ('Xbox Game Pass Ultimate 3 Months', 'USD', 68.99)
+   ('Xbox Game Pass Ultimate 5 Days', 'USD', 14.99)
+   ('Xbox Game Pass Ultimate 6 Months', 'USD', 137.99)
+PC Game Pass:
+   ('14 Day Trial Recurs Monthly', 'USD', 13.99)
+   ('PC Game Pass 1 Day', 'USD', 4.99)
+   ('PC Game Pass 1 Month', 'USD', 13.99)
+   ('PC Game Pass 12 Months', 'USD', 167.99)
+   ('PC Game Pass 3 Months', 'USD', 41.99)
+   ('PC Game Pass 5 Day', 'USD', 0.1)
+   ('PC Game Pass 6 Months', 'USD', 83.99)
+   ('PC Games 14 Day Free Trial', 'USD', 13.99)
+   ('Trial Benefit', 'USD', 13.99)
+Console (legado):
+   ('Console 1 Day', 'USD', 9.99)
+   ('Console 1 Month', 'USD', 10.99)
+   ('Console 12 Months', 'USD', 131.99)
+   ('Console 3 Months', 'USD', 32.99)
+   ('Console 6 Months', 'USD', 65.99)
+   ('Xbox Game Pass 1 Month Free Trial', 'USD', 10.99)
+   ('Xbox Game Pass 14-Day Free Trial', 'USD', 10.99)
+   ('Xbox Game Pass 7-Day Free Trial', 'USD', 10.99)
