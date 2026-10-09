@@ -17,8 +17,10 @@ export type Product = {
   /** Preço cheio (MSRP), para mostrar promoção. */
   regularPriceMinor: number | null;
   saleEndsAt: string | null;
-  /** Preço com desconto de assinante, quando existir e for menor que o público. */
-  memberPriceMinor: number | null;
+  /** Preço com desconto de assinante por plano (só quando o catálogo associa o desconto àquele plano). */
+  memberPrices: Partial<Record<PlanCode, number>>;
+  /** Título indica edição superior (Deluxe, Premium, Ultimate…): o plano pode incluir só a padrão. */
+  upperEdition: boolean;
   /** Em quais planos e plataformas o produto está incluído. */
   includedIn: Partial<Record<PlanCode, Platform[]>>;
   /** false = encontrado mas indisponível neste mercado. */

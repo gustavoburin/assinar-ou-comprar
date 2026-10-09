@@ -4,6 +4,29 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { clampMonths } from "./engine";
 import type { CartItem, Locale, PlanCode, Platform } from "./types";
 
+const ID_RE = /^[0-9A-Z]{12}$/;
+const PLAN_CODES: PlanCode[] = ["ultimate", "premium", "pc"];
+
+/** Valida o que vem do localStorage (pode ser antigo ou adulterado); campo inválido volta ao padrão. */
+export function sanitizePersisted(raw: unknown): Partial<Pick<State, "cart" | "plan" | "platform" | "months" | "locale">> {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const out: Partial<Pick<State, "cart" | "plan" | "platform" | "months" | "locale">> = {};
+  if (Array.isArray(o.cart)) {
+    const seen = new Set<string>();
+    out.cart = o.cart
+      .filter((c): c is CartItem => !!c && typeof c === "object" && typeof c.id === "string" && ID_RE.test(c.id))
+      .filter((c) => !seen.has(c.id) && (seen.add(c.id), true))
+      .map((c) => ({ id: c.id, owned: c.owned === true, keep: c.keep === true }))
+      .slice(0, MAX_CART);
+  }
+  if (PLAN_CODES.includes(o.plan as PlanCode)) out.plan = o.plan as PlanCode;
+  if (o.platform === "console" || o.platform === "pc") out.platform = o.platform;
+  if (typeof o.months === "number") out.months = clampMonths(o.months);
+  if (o.locale === "pt-BR" || o.locale === "en-US") out.locale = o.locale;
+  if (out.plan === "pc") out.platform = "pc";
+  return out;
+}
+
 type State = {
   cart: CartItem[];
   plan: PlanCode;
@@ -49,6 +72,9 @@ export const useApp = create<State>()(
     {
       name: "gpoc-v1",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persisted) => persisted as State,
+      merge: (persisted, current) => ({ ...current, ...sanitizePersisted(persisted) }),
       partialize: (s) => ({ cart: s.cart, plan: s.plan, platform: s.platform, months: s.months, locale: s.locale }),
     },
   ),
@@ -73,9 +99,11 @@ export function decodeShare(sp: URLSearchParams): DecodedShare | null {
   const cart: CartItem[] = [];
   for (const tok of raw.split(",").slice(0, MAX_CART)) {
     const [id, ...flags] = tok.toUpperCase().split(".");
-    if (!/^[0-9A-Z]{12}$/.test(id) || cart.some((c) => c.id === id)) continue;
+    if (!ID_RE.test(id) || cart.some((c) => c.id === id)) continue;
     cart.push({ id, owned: flags.includes("O"), keep: flags.includes("K") });
   }
+  // Link sem nenhum item válido não pode apagar a lista local.
+  if (cart.length === 0) return null;
   const plan = sp.get("plan");
   const pf = sp.get("pf");
   const t = Number(sp.get("t"));

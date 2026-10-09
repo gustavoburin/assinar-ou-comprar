@@ -12,7 +12,8 @@ const base: Omit<Product, "id" | "title"> = {
   priceMinor: 24900,
   regularPriceMinor: 24900,
   saleEndsAt: null,
-  memberPriceMinor: null,
+  memberPrices: {},
+  upperEdition: false,
   includedIn: {},
   available: true,
   verifiedAt: "2026-10-09T00:00:00Z",
@@ -22,7 +23,7 @@ const prod = (id: string, over: Partial<Product> = {}): Product => ({ ...base, i
 // Ultimate BR = R$ 76,90 (7690)
 const fh5 = prod("FH5", { priceMinor: 24900, includedIn: { ultimate: ["console", "pc"], premium: ["console", "pc"] } });
 const fm = prod("FM", { priceMinor: 34900, includedIn: { ultimate: ["console", "pc"], premium: ["console", "pc"] } });
-const cod = prod("COD", { priceMinor: 39900, memberPriceMinor: 31920 }); // fora do plano, -20% assinante
+const cod = prod("COD", { priceMinor: 39900, memberPrices: { ultimate: 31920, pc: 31920 } }); // fora do plano, -20% assinante (não Premium)
 const pcOnly = prod("PCONLY", { priceMinor: 10000, includedIn: { ultimate: ["pc"], pc: ["pc"] } });
 
 function input(over: Partial<CompareInput>): CompareInput {
@@ -58,6 +59,18 @@ describe("compare", () => {
     expect(total(r, "buy")).toBe(24900 + 39900);
     expect(total(r, "subscribe")).toBe(3 * 7690 + 31920);
     expect(r.items.find((i) => i.id === "COD")!.status).toBe("buy");
+  });
+
+  it("desconto de assinante só vale para o plano associado no catálogo", () => {
+    const r = compare(input({ cart: cart("COD"), plan: planByCode("premium") }));
+    expect(total(r, "subscribe")).toBe(3 * 5990 + 39900); // Premium não tem o desconto → preço público
+  });
+
+  it("edição superior fora do plano é sinalizada, sem esconder o custo", () => {
+    const deluxe = prod("DLX", { priceMinor: 30900, upperEdition: true });
+    const r = compare(input({ cart: cart("DLX"), products: { DLX: deluxe } }));
+    expect(r.items[0].status).toBe("buy");
+    expect(r.items[0].upperEditionOutside).toBe(true);
   });
 
   it("ponto de equilíbrio considera a economia de assinante nos jogos fora do plano", () => {

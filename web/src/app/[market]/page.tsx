@@ -32,7 +32,7 @@ export default async function MarketPage({ params }: PageProps<"/[market]">) {
   if (market !== "br" && market !== "us") notFound();
   return (
     <Suspense>
-      <App market={market.toUpperCase() as Market} />
+      <App key={market} market={market.toUpperCase() as Market} />
     </Suspense>
   );
 }

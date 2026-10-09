@@ -63,7 +63,7 @@ No PRD, "Assinar" já inclui comprar os jogos fora do plano; "Híbrido" = isso +
 A informação mais útil para o usuário é "quantos meses de assinatura empatam com comprar" — destaque principal da tela.
 
 ### C3 — Edições premium e assinatura
-O Game Pass costuma incluir só a edição padrão. Se o usuário escolhe Deluxe, o cenário assinatura precisa de "upgrade" (pacote de complementos) — o catálogo tem esses bundles (ex.: "Pacote de Complementos Supremo do FH5"), mas casar edição↔upgrade é frágil. MVP: se o item escolhido é uma edição superior e o plano só inclui a padrão, o cenário assinatura **não é equivalente** — tratar como comparação parcial para esse item ("assinatura dá acesso à edição padrão; conteúdo extra não incluído"), salvo quando o catálogo trouxer um pacote de upgrade casado com segurança, que então entra como compra.
+O Game Pass costuma incluir só a edição padrão. Se o usuário escolhe Deluxe, o cenário assinatura precisa de "upgrade" (pacote de complementos) — o catálogo tem esses bundles (ex.: "Pacote de Complementos Supremo do FH5"), mas casar edição↔upgrade é frágil. **Decisão do MVP (2026-10-09, após revisão do Codex):** a comparação é sobre a edição que o usuário escolheu. Se ele quer a Deluxe e o plano não a inclui, no cenário assinatura ele compra a Deluxe (com desconto de assinante daquele plano, se houver) — custo completo e honesto para esse desejo. Como o catálogo não liga edição superior ↔ padrão com segurança, o item recebe um **aviso** ("o Game Pass costuma incluir só a edição padrão") em vez de virar comparação parcial; quem quiser só jogar troca para a edição padrão, que mostra "No Game Pass". Casar pacote de upgrade fica para depois.
 
 ## 4. Cortes de escopo (simplificar sem perder o núcleo)
 

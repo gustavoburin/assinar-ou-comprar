@@ -12,6 +12,9 @@ const SUB = {
   pc: "CFQ7TTC0KGQ8",
   ubisoft: "CFQ7TTC0QH5H",
 } as const;
+/** Ultimate reúne os benefícios de todas as assinaturas (inclui PC, Premium, Console legado, EA Play, Ubisoft+). */
+const UPPER_EDITION =
+  /\b(deluxe|premium|ultimate|gold|definitive|complete|collector'?s|suprema|de luxo|definitiva|completa|edi[cç][aã]o premium|vault|bundle|pacote)\b/i;
 
 export type GamePassLists = { console: string[]; pc: string[] };
 
@@ -96,7 +99,7 @@ export function parseProduct(raw: Raw, market: Market, lists: GamePassLists, ver
   const subs = new Set<string>(); // assinaturas com acesso incluído (preço 0)
   const allRemediations = new Set<string>();
   const publicPrices: { list: number; msrp: number; end: string | null }[] = [];
-  const memberPrices: number[] = [];
+  const memberBySub = new Map<string, number>();
 
   for (const sku of raw.DisplaySkuAvailabilities ?? []) {
     // SKUs de avaliação gratuita custam 0 e não são o preço do jogo.
@@ -110,7 +113,11 @@ export function parseProduct(raw: Raw, market: Market, lists: GamePassLists, ver
       if (!(a.Actions ?? []).includes("Purchase")) continue;
       if (rem.length > 0) {
         if (price.ListPrice === 0) rem.forEach((r) => subs.add(r));
-        else memberPrices.push(toMinor(price.ListPrice));
+        else
+          for (const r of rem) {
+            const v = toMinor(price.ListPrice);
+            memberBySub.set(r, Math.min(v, memberBySub.get(r) ?? Infinity));
+          }
       } else {
         publicPrices.push({ list: toMinor(price.ListPrice), msrp: toMinor(price.MSRP), end: a.Conditions?.EndDate ?? null });
       }
@@ -120,7 +127,6 @@ export function parseProduct(raw: Raw, market: Market, lists: GamePassLists, ver
   publicPrices.sort((a, b) => a.list - b.list);
   const best = publicPrices[0];
   const priceMinor = best ? best.list : null;
-  const memberMin = memberPrices.length ? Math.min(...memberPrices) : null;
   const onSale = best && best.list < best.msrp;
   const saleEnd = onSale && best.end && Date.parse(best.end) < Date.parse("2100-01-01") ? best.end : null;
 
@@ -130,11 +136,21 @@ export function parseProduct(raw: Raw, market: Market, lists: GamePassLists, ver
   const includedIn: Partial<Record<PlanCode, Platform[]>> = {};
   // Ultimate = listas "All Console/PC Games" do Game Pass.
   if (onConsole || onPc) includedIn.ultimate = plats(onConsole, onPc);
-  // Premium: remediação estruturada do catálogo, restrita às listas.
-  if (subs.has(SUB.premium)) includedIn.premium = plats(onConsole, onPc);
+  // Premium: definido pela remediação do catálogo; as listas só refinam a plataforma quando o produto aparece nelas.
+  if (subs.has(SUB.premium)) includedIn.premium = onConsole || onPc ? plats(onConsole, onPc) : ["console", "pc"];
   // PC Game Pass: lista PC, exceto títulos que só vêm via Ubisoft+ (exclusivo do Ultimate).
   const ubisoftOnly = allRemediations.has(SUB.ubisoft) && !allRemediations.has(SUB.pc);
   if (onPc && !ubisoftOnly) includedIn.pc = ["pc"];
+
+  // Desconto de assinante só vale para o plano a que o catálogo o associa.
+  const memberPrices: Partial<Record<PlanCode, number>> = {};
+  const under = (v: number | undefined) => (v !== undefined && priceMinor !== null && v < priceMinor ? v : undefined);
+  const pcMember = under(memberBySub.get(SUB.pc));
+  const premiumMember = under(memberBySub.get(SUB.premium));
+  const anyMember = under(memberBySub.size ? Math.min(...memberBySub.values()) : undefined);
+  if (pcMember !== undefined) memberPrices.pc = pcMember;
+  if (premiumMember !== undefined) memberPrices.premium = premiumMember;
+  if (anyMember !== undefined) memberPrices.ultimate = anyMember;
 
   const release = raw.MarketProperties?.[0]?.OriginalReleaseDate ?? null;
   const locale = market === "BR" ? "pt-BR" : "en-US";
@@ -149,7 +165,8 @@ export function parseProduct(raw: Raw, market: Market, lists: GamePassLists, ver
     priceMinor,
     regularPriceMinor: best ? best.msrp : null,
     saleEndsAt: saleEnd,
-    memberPriceMinor: memberMin !== null && priceMinor !== null && memberMin < priceMinor ? memberMin : null,
+    memberPrices,
+    upperEdition: UPPER_EDITION.test(lp.ProductTitle ?? ""),
     includedIn,
     available: priceMinor !== null || subs.size > 0 || onConsole || onPc,
     verifiedAt,

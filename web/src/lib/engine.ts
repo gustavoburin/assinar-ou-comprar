@@ -19,6 +19,8 @@ export type ItemResult = {
   /** Custo no cenário assinatura (0 se incluído; preço de assinante se fora). */
   subscribeCost: number | null;
   keep: boolean;
+  /** Edição superior fora do plano: o plano pode incluir a edição padrão (aviso na UI). */
+  upperEditionOutside: boolean;
 };
 
 export type Scenario = { key: "buy" | "subscribe" | "subscribeKeep"; totalMinor: number };
@@ -54,11 +56,11 @@ export function clampMonths(m: number): number {
   return Math.min(MAX_MONTHS, Math.max(MIN_MONTHS, Math.round(m)));
 }
 
-/** Preço de compra enquanto assinante: desconto de membro se houver, senão o público. */
-function memberOrPublic(p: Product): number | null {
+/** Preço de compra enquanto assinante do plano: desconto daquele plano se houver, senão o público. */
+export function memberOrPublic(p: Product, plan: Plan): number | null {
   if (p.priceMinor === null) return null;
-  if (p.memberPriceMinor !== null && p.memberPriceMinor < p.priceMinor) return p.memberPriceMinor;
-  return p.priceMinor;
+  const m = p.memberPrices[plan.code];
+  return m !== undefined && m < p.priceMinor ? m : p.priceMinor;
 }
 
 export function isIncluded(p: Product, plan: Plan, platform: Platform): boolean {
@@ -77,21 +79,21 @@ export function compare(input: CompareInput): Comparison {
     seen.add(c.id);
     const p = input.products[c.id];
     if (c.owned) {
-      items.push({ id: c.id, status: "owned", buyCost: 0, subscribeCost: 0, keep: c.keep });
+      items.push({ id: c.id, status: "owned", buyCost: 0, subscribeCost: 0, keep: c.keep, upperEditionOutside: false });
       continue;
     }
     if (!p || p.market !== market) {
       // Dado do produto ausente (ou de outro mercado): nunca vira zero.
-      items.push({ id: c.id, status: "unknown", buyCost: null, subscribeCost: null, keep: c.keep });
+      items.push({ id: c.id, status: "unknown", buyCost: null, subscribeCost: null, keep: c.keep, upperEditionOutside: false });
       continue;
     }
     const included = isIncluded(p, plan, platform);
     if (!p.available && !included) {
-      items.push({ id: c.id, status: "unavailable", buyCost: null, subscribeCost: null, keep: c.keep });
+      items.push({ id: c.id, status: "unavailable", buyCost: null, subscribeCost: null, keep: c.keep, upperEditionOutside: false });
       continue;
     }
     if (included) {
-      items.push({ id: c.id, status: "included", buyCost: p.priceMinor, subscribeCost: 0, keep: c.keep });
+      items.push({ id: c.id, status: "included", buyCost: p.priceMinor, subscribeCost: 0, keep: c.keep, upperEditionOutside: false });
       continue;
     }
     const price = p.priceMinor;
@@ -99,8 +101,9 @@ export function compare(input: CompareInput): Comparison {
       id: c.id,
       status: price === null ? "unknown" : "buy",
       buyCost: price,
-      subscribeCost: memberOrPublic(p),
+      subscribeCost: memberOrPublic(p, plan),
       keep: c.keep,
+      upperEditionOutside: p.upperEdition,
     });
   }
 
@@ -125,7 +128,7 @@ export function compare(input: CompareInput): Comparison {
     const keepCost = sum(
       keepIncluded.map((i) => {
         const p = input.products[i.id]!;
-        return memberOrPublic(p);
+        return memberOrPublic(p, plan);
       }),
     );
     scenarios.push({ key: "subscribeKeep", totalMinor: subscribeTotal + keepCost });

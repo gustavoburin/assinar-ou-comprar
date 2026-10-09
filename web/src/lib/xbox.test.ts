@@ -19,13 +19,15 @@ describe("parseProduct (fixture real BR)", () => {
     expect(p.includedIn.premium).toEqual(["console", "pc"]);
     expect(p.includedIn.pc).toEqual(["pc"]);
     expect(p.cover).toMatch(/^https:\/\/store-images/);
-    expect(p.memberPriceMinor).toBeNull();
+    expect(p.memberPrices).toEqual({});
+    expect(p.upperEdition).toBe(false);
   });
 
-  it("FH5 Deluxe: fora do plano, com desconto de assinante", () => {
+  it("FH5 Deluxe: fora do plano; desconto só para PC Game Pass e Ultimate (não Premium)", () => {
     const p = parse("9P1HX37NMJLT");
     expect(p.priceMinor).toBe(30900);
-    expect(p.memberPriceMinor).toBe(24720);
+    expect(p.memberPrices).toEqual({ pc: 24720, ultimate: 24720 });
+    expect(p.upperEdition).toBe(true);
     expect(p.includedIn).toEqual({});
   });
 
@@ -45,7 +47,7 @@ describe("SKU de avaliação", () => {
   it("33 Immortals: ignora o SKU de trial com preço 0 (bug achado no navegador)", () => {
     const p = parseProduct(trialFixture.Products[0], "BR", { console: [], pc: [] }, "x", now);
     expect(p.priceMinor).toBe(7295);
-    expect(p.includedIn.premium).toEqual([]);
+    expect(p.includedIn.premium).toEqual(["console", "pc"]); // Premium vem da remediação, mesmo fora das listas
   });
 });
 

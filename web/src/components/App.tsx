@@ -7,9 +7,9 @@ import { compare, MAX_MONTHS, MIN_MONTHS, type Comparison } from "@/lib/engine";
 import { DEFAULT_LOCALE, DICTS, formatDateTime, formatMoney, type Dict } from "@/lib/i18n";
 import { PLANS, planByCode } from "@/lib/plans";
 import { decodeShare, encodeShare, useApp } from "@/lib/store";
-import type { Locale, Market, Product } from "@/lib/types";
+import type { Locale, Market, PlanCode, Product } from "@/lib/types";
 
-type Ctx = { t: Dict; market: Market; locale: Locale; money: (m: number) => string };
+type Ctx = { t: Dict; market: Market; locale: Locale; money: (m: number) => string; planCode: PlanCode };
 
 const noop = () => () => {};
 /** true só no cliente (o carrinho vive no localStorage). */
@@ -25,10 +25,15 @@ export default function App({ market }: { market: Market }) {
   const locale: Locale = s.locale ?? DEFAULT_LOCALE[market];
   const t = DICTS[locale];
   const money = useCallback((m: number) => formatMoney(m, market, locale), [market, locale]);
-  const ctx: Ctx = { t, market, locale, money };
+  const ctx: Ctx = { t, market, locale, money, planCode: s.plan };
 
   const [products, setProducts] = useState<Record<string, Product>>({});
   const [drawer, setDrawer] = useState(false);
+  const drawerTrigger = useRef<HTMLButtonElement>(null);
+  const closeDrawer = () => {
+    setDrawer(false);
+    requestAnimationFrame(() => drawerTrigger.current?.focus());
+  };
 
   // Link compartilhado: lido na primeira renderização, aplicado uma vez, URL limpa depois.
   const [shared] = useState(() => decodeShare(new URLSearchParams(sp.toString())));
@@ -50,28 +55,38 @@ export default function App({ market }: { market: Market }) {
   // Busca dados atuais de todos os itens do carrinho (revalida preços ao abrir/trocar mercado).
   const cartKey = s.cart.map((c) => c.id).sort().join(",");
   const [fetchedKey, setFetchedKey] = useState("");
+  const [failedKey, setFailedKey] = useState("");
+  const loadKey = `${market}:${cartKey}`;
+  // Produto de outro mercado conta como ausente: precisa da versão regional.
+  const isMissing = useCallback((id: string) => !products[id] || products[id].market !== market, [products, market]);
   useEffect(() => {
-    if (!hydrated || !cartKey || fetchedKey === `${market}:${cartKey}`) return;
-    const missing = cartKey.split(",").filter((id) => !products[id]);
+    if (!hydrated || !cartKey || fetchedKey === loadKey || failedKey === loadKey) return;
+    const missing = cartKey.split(",").filter(isMissing);
     if (missing.length === 0) return;
     let cancelled = false;
     fetch(`/api/products?market=${market}&ids=${missing.join(",")}`)
-      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
       .then((d: { items: Product[] }) => {
         if (cancelled) return;
         setProducts((prev) => ({ ...prev, ...Object.fromEntries(d.items.map((p) => [p.id, p])) }));
+        setFetchedKey(loadKey);
       })
-      .finally(() => !cancelled && setFetchedKey(`${market}:${cartKey}`));
+      .catch(() => !cancelled && setFailedKey(loadKey));
     return () => {
       cancelled = true;
     };
-  }, [hydrated, cartKey, market, products, fetchedKey]);
+  }, [hydrated, cartKey, market, loadKey, isMissing, fetchedKey, failedKey]);
 
   const remember = useCallback((items: Product[]) => {
     setProducts((prev) => ({ ...prev, ...Object.fromEntries(items.map((p) => [p.id, p])) }));
   }, []);
 
-  const loadingIds = Boolean(cartKey) && fetchedKey !== `${market}:${cartKey}` && cartKey.split(",").some((id) => !products[id]);
+  const loadFailed = Boolean(cartKey) && failedKey === loadKey;
+  const loadingIds = Boolean(cartKey) && !loadFailed && fetchedKey !== loadKey && cartKey.split(",").some(isMissing);
+  const retry = () => setFailedKey("");
   const sharedHint = shared ? shared.hintTotal : undefined;
   const plan = planByCode(s.plan);
   const result = useMemo(
@@ -87,7 +102,7 @@ export default function App({ market }: { market: Market }) {
   return (
     <div className="min-h-dvh">
       <Header ctx={ctx} />
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-28 lg:grid-cols-[1fr_400px] lg:pb-10">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-28 lg:grid-cols-[1fr_400px] lg:pb-10" inert={drawer}>
         <main className="min-w-0">
           <p className="mb-4 text-muted">{t.tagline}</p>
           {sharedHint !== undefined && (
@@ -102,14 +117,19 @@ export default function App({ market }: { market: Market }) {
         </main>
         <aside className="hidden lg:block">
           <div className="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-line bg-panel p-4">
-            <Panel ctx={ctx} products={products} result={result} loading={loadingIds} />
+            <Panel ctx={ctx} products={products} result={result} loading={loadingIds} failed={loadFailed} onRetry={retry} />
           </div>
         </aside>
       </div>
 
       {/* Celular: total sempre visível + painel expansível */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-panel/95 p-3 backdrop-blur lg:hidden">
-        <button className="flex w-full items-center justify-between rounded-xl bg-accent px-4 py-3 font-semibold text-black" onClick={() => setDrawer(true)}>
+        <button
+          ref={drawerTrigger}
+          className="flex w-full items-center justify-between rounded-xl bg-accent px-4 py-3 font-semibold text-black"
+          onClick={() => setDrawer(true)}
+          aria-expanded={drawer}
+        >
           <span>
             {t.yourList} ({s.cart.length})
           </span>
@@ -117,19 +137,25 @@ export default function App({ market }: { market: Market }) {
         </button>
       </div>
       {drawer && (
-        <div className="fixed inset-0 z-30 flex flex-col bg-bg lg:hidden" role="dialog" aria-modal="true" aria-label={t.yourList}>
+        <div
+          className="fixed inset-0 z-30 flex flex-col bg-bg lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.yourList}
+          onKeyDown={(e) => e.key === "Escape" && closeDrawer()}
+        >
           <div className="flex items-center justify-between border-b border-line p-3">
             <strong>{t.yourList}</strong>
-            <button className="btn-ghost" onClick={() => setDrawer(false)}>
+            <button className="btn-ghost" onClick={closeDrawer} autoFocus>
               {t.close}
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            <Panel ctx={ctx} products={products} result={result} loading={loadingIds} />
+            <Panel ctx={ctx} products={products} result={result} loading={loadingIds} failed={loadFailed} onRetry={retry} />
           </div>
         </div>
       )}
-      <footer className="mx-auto max-w-7xl px-4 pb-32 text-xs text-muted lg:pb-8">
+      <footer className="mx-auto max-w-7xl px-4 pb-32 text-xs text-muted lg:pb-8" inert={drawer}>
         <p>{t.disclaimer}</p>
         <p className="mt-1">{t.essentialNote}</p>
       </footer>
@@ -207,13 +233,18 @@ function Search({
   const [onlyGp, setOnlyGp] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     fetch(`/api/featured?market=${market}`)
       .then((r) => (r.ok ? r.json() : { items: [] }))
       .then((d) => {
+        if (cancelled) return;
         setFeatured(d.items);
         remember(d.items);
       })
       .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [market, remember]);
 
   useEffect(() => {
@@ -297,7 +328,8 @@ function Cover({ p, className }: { p: Product; className: string }) {
 }
 
 function PriceTag({ ctx, p }: { ctx: Ctx; p: Product }) {
-  const { t, money, locale } = ctx;
+  const { t, money, locale, planCode } = ctx;
+  const member = p.memberPrices[planCode];
   if (p.priceMinor === null) return <span className="text-sm text-warn">{p.available ? t.noPrice : t.unavailable}</span>;
   const onSale = p.regularPriceMinor !== null && p.priceMinor < p.regularPriceMinor;
   return (
@@ -312,9 +344,9 @@ function PriceTag({ ctx, p }: { ctx: Ctx; p: Product }) {
           </span>
         </>
       )}
-      {p.memberPriceMinor !== null && (
+      {member !== undefined && (
         <span className="text-xs text-muted">
-          {money(p.memberPriceMinor)} {t.memberPrice}
+          {money(member)} {t.memberPrice}
         </span>
       )}
     </span>
@@ -362,12 +394,27 @@ function ProductCard({
   );
 }
 
-function Panel({ ctx, products, result, loading }: { ctx: Ctx; products: Record<string, Product>; result: Comparison; loading: boolean }) {
+function Panel({
+  ctx,
+  products,
+  result,
+  loading,
+  failed,
+  onRetry,
+}: {
+  ctx: Ctx;
+  products: Record<string, Product>;
+  result: Comparison;
+  loading: boolean;
+  failed: boolean;
+  onRetry: () => void;
+}) {
   const { t, money, market, locale } = ctx;
   const s = useApp();
   const plan = planByCode(s.plan);
   const [copied, setCopied] = useState(false);
   const statusById = Object.fromEntries(result.items.map((i) => [i.id, i.status]));
+  const upperById = Object.fromEntries(result.items.map((i) => [i.id, i.upperEditionOutside]));
   const verified = Object.values(products)
     .filter((p) => s.cart.some((c) => c.id === p.id))
     .map((p) => p.verifiedAt)
@@ -403,6 +450,14 @@ function Panel({ ctx, products, result, loading }: { ctx: Ctx; products: Record<
         )}
       </div>
 
+      {failed && (
+        <div role="alert" className="flex items-center justify-between gap-2 rounded-lg border border-warn/50 bg-warn/10 p-2 text-sm">
+          <span>{t.sourceError}</span>
+          <button className="btn-ghost" onClick={onRetry}>
+            {t.retry}
+          </button>
+        </div>
+      )}
       {s.cart.length === 0 ? (
         <p className="rounded-lg border border-dashed border-line p-4 text-sm text-muted">{t.emptyCart}</p>
       ) : (
@@ -429,6 +484,7 @@ function Panel({ ctx, products, result, loading }: { ctx: Ctx; products: Record<
                       <input type="checkbox" checked={c.owned} onChange={() => s.toggle(c.id, "owned")} />
                       {t.owned}
                     </label>
+                    {upperById[c.id] && <span className="basis-full text-warn">{t.upperEditionHint}</span>}
                     {st === "included" && (
                       <label className="flex items-center gap-1" title={t.keepHint}>
                         <input type="checkbox" checked={c.keep} onChange={() => s.toggle(c.id, "keep")} />

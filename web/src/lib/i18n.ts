@@ -55,7 +55,7 @@ const pt = {
   assumptions: "Premissas",
   assumptionList: (plan: string, price: string) => [
     `${plan}: ${price}/mês, conferido em xbox.com.`,
-    "Jogos fora do plano são comprados com desconto de assinante, quando houver.",
+    "Jogos fora do plano são comprados com o desconto de assinante do plano escolhido, quando o catálogo indica um.",
     "O catálogo do Game Pass muda: considera-se o catálogo de hoje durante todo o período.",
     "Comprar dá uma licença digital; assinar dá acesso enquanto o plano estiver ativo e o jogo no catálogo.",
     "O Game Pass costuma incluir só a edição padrão; edições superiores contam como compra.",
@@ -76,6 +76,8 @@ const pt = {
   close: "Fechar",
   chooseMarket: "Escolha o país da loja",
   loading: "Carregando…",
+  retry: "Tentar de novo",
+  upperEditionHint: "Edição superior: o Game Pass costuma incluir só a edição padrão. Aqui ela conta como compra.",
 };
 
 type Dict = typeof pt;
@@ -125,7 +127,7 @@ const en: Dict = {
   assumptions: "Assumptions",
   assumptionList: (plan: string, price: string) => [
     `${plan}: ${price}/month, checked on xbox.com.`,
-    "Games outside the plan are bought with the member discount, when there is one.",
+    "Games outside the plan are bought with the chosen plan's member discount, when the catalog lists one.",
     "The Game Pass catalog changes: today's catalog is assumed for the whole period.",
     "Buying gives you a digital license; subscribing gives access while the plan is active and the game is in the catalog.",
     "Game Pass usually includes only the standard edition; higher editions count as purchases.",
@@ -146,6 +148,8 @@ const en: Dict = {
   close: "Close",
   chooseMarket: "Choose the store country",
   loading: "Loading…",
+  retry: "Try again",
+  upperEditionHint: "Higher edition: Game Pass usually includes only the standard edition. Here it counts as a purchase.",
 };
 
 export const DICTS: Record<Locale, Dict> = { "pt-BR": pt, "en-US": en };

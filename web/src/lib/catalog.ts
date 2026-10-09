@@ -9,10 +9,12 @@ import { fetchGamePassLists, fetchRawProducts, fetchSuggestions, isMainGame, par
 export const MAX_IDS = 40;
 const ID_RE = /^[0-9A-Z]{12}$/;
 
-export function sanitizeIds(raw: string | null): string[] {
-  if (!raw) return [];
-  const ids = raw.toUpperCase().split(",").map((s) => s.trim()).filter((s) => ID_RE.test(s));
-  return [...new Set(ids)].slice(0, MAX_IDS);
+/** IDs da loja vindos da URL. null = parâmetro inválido (vazio, token malformado ou acima do limite). */
+export function parseIds(raw: string | null): string[] | null {
+  if (!raw) return null;
+  const ids = raw.toUpperCase().split(",").map((s) => s.trim());
+  if (ids.length > MAX_IDS || ids.some((s) => !ID_RE.test(s))) return null;
+  return [...new Set(ids)];
 }
 
 export function parseMarket(raw: string | null): Market | null {
@@ -26,21 +28,17 @@ async function gamePassLists(market: Market): Promise<GamePassLists> {
   return fetchGamePassLists(market);
 }
 
-async function productsUncached(ids: string[], market: Market): Promise<Product[]> {
-  const [lists, raws] = await Promise.all([gamePassLists(market), fetchRawProducts(ids, market)]);
-  const verifiedAt = new Date().toISOString();
-  return raws.map((r) => parseProduct(r, market, lists, verifiedAt));
-}
-
-/** `ids` deve vir ordenado para reaproveitar o cache. */
-async function productsCached(ids: string[], market: Market): Promise<Product[]> {
+/** Cache por (mercado, produto): carrinhos diferentes reaproveitam os mesmos itens. */
+async function productCached(id: string, market: Market): Promise<Product | null> {
   "use cache: remote";
   cacheLife("hours");
-  return productsUncached(ids, market);
+  const [lists, raws] = await Promise.all([gamePassLists(market), fetchRawProducts([id], market)]);
+  return raws[0] ? parseProduct(raws[0], market, lists, new Date().toISOString()) : null;
 }
 
 export async function getProducts(ids: string[], market: Market): Promise<Product[]> {
-  return productsCached([...ids].sort(), market);
+  const found = await Promise.all(ids.map((id) => productCached(id, market)));
+  return found.filter((p): p is Product => p !== null);
 }
 
 async function searchCached(query: string, market: Market): Promise<Product[]> {

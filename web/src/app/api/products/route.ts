@@ -1,11 +1,12 @@
-import { getProducts, parseMarket, sanitizeIds } from "@/lib/catalog";
+import { getProducts, parseIds, parseMarket } from "@/lib/catalog";
 import { json } from "@/lib/http";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const market = parseMarket(url.searchParams.get("market"));
   if (!market) return json({ error: "market inválido" }, 400);
-  const ids = sanitizeIds(url.searchParams.get("ids"));
+  const ids = parseIds(url.searchParams.get("ids"));
+  if (!ids) return json({ error: "ids inválidos (1 a 40 IDs da loja separados por vírgula)" }, 400);
   try {
     const items = await getProducts(ids, market);
     return json({ items }, 200, 1800);
