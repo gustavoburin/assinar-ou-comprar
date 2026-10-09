@@ -19,6 +19,7 @@
 - Fase 0: inclusão por plano mapeada em 818 produtos (Premium/PC via remediação; Ultimate = listas sigls; EA Play e Ubisoft+ só Ultimate). Essential sem lista pública → fora. Preços dos planos conferidos em xbox.com.
 - MVP construído: testes passando, lint/tsc/build ok, verificado no navegador (desktop, celular, BR→US, link compartilhado, comparação parcial).
 - Bug achado no navegador e corrigido: SKU de avaliação grátis virava preço 0 (33 Immortals).
+- Revisão do Codex sobre `web/`: 9 de 10 achados confirmados e corrigidos (ver `checks.md`); 31/31 testes; redeploy verificado em produção.
 - Deploy de produção; CDN confirmou `x-vercel-cache: HIT` na 2ª busca.
 
 **Decisões:**
@@ -27,11 +28,10 @@
 - Edição superior não incluída no plano conta como compra (com desconto de assinante).
 
 **Pendências:**
-- Revisão do Codex sobre `web/` (ver seção abaixo quando concluída).
 - Essential; histórico de preços (Supabase); Playwright E2E; revisão WCAG formal; SEO de páginas de jogo.
 - Heurística de DLC por título pode deixar passar casos.
 
-**Próxima ação:** aplicar achados confirmados do Codex, `npm test` + build, redeploy.
+**Próxima ação:** testar com 3–5 pessoas reais; depois decidir entre (a) Supabase para histórico de preços, (b) Playwright E2E, (c) lista do Essential.
 
 ## Procedimento: deploy
 ```
