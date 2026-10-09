@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0b0f0c;
+  --panel: #131a15;
+  --line: #24302a;
+  --fg: #eef3ef;
+  --muted: #93a39a;
+  --accent: #3ddc84;
+  --warn: #f5b84a;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-warn: var(--warn);
+  --font-sans: var(--font-geist-sans);
+}
+
+html { color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-sans), system-ui, sans-serif; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@layer components {
+  .select { @apply rounded-lg border border-line bg-panel px-2 py-1.5 text-fg; }
+  .btn-ghost { @apply rounded-lg border border-line px-2.5 py-1 text-sm hover:border-accent; }
+  .btn-primary { @apply rounded-xl bg-accent px-5 py-3 font-semibold text-black hover:brightness-110; }
+  .text-muted { color: var(--muted); }
+}
