@@ -72,6 +72,16 @@ describe("channelIdsFromHtml (busca real do xbox.com por \"halo\", 2026-10-10)",
 
   it("falha de forma explícita se o formato mudar", () => {
     expect(() => channelIdsFromHtml("<html></html>")).toThrow();
+    // Estado presente, mas sem core2.channels: erro (aciona fallback), não lista vazia.
+    expect(() => channelIdsFromHtml('<script>window.__PRELOADED_STATE__ = {"core2":{}};</script>')).toThrow();
+    expect(() =>
+      channelIdsFromHtml('<script>window.__PRELOADED_STATE__ = {"core2":{"channels":{"channelData":{"x":{"data":{"products":[{"foo":1}]}}}}}};</script>'),
+    ).toThrow();
+  });
+
+  it("canal presente e vazio = sem resultados; chaves dentro de strings não quebram o parser", () => {
+    const html = '<script>window.__PRELOADED_STATE__ = {"t":"a } { \\" ]","core2":{"channels":{"channelData":{"x":{"data":{"products":[]}}}}}}; var z = {};</script>';
+    expect(channelIdsFromHtml(html)).toEqual([]);
   });
 });
 
@@ -82,5 +92,9 @@ describe("isMainGame: upgrades e vouchers", () => {
     expect(isMainGame(g("Halo: Campaign Evolved - Atualização da Premium Edition"))).toBe(false);
     expect(isMainGame(g("Halo Wars 2 Demo"))).toBe(false);
     expect(isMainGame(g("Gears of War: E-Day Premium Edition"))).toBe(true);
+    expect(isMainGame(g("Forza Horizon 6 Car Voucher 4"))).toBe(false);
+    expect(isMainGame(g("Upgrade"))).toBe(true); // jogo chamado "Upgrade" não é DLC
+    expect(isMainGame(g("Demonschool"))).toBe(true);
+    expect(isMainGame(g("Demo Derby Legends"))).toBe(true);
   });
 });

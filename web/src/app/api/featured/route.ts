@@ -5,7 +5,8 @@ export async function GET(req: Request) {
   const market = parseMarket(new URL(req.url).searchParams.get("market"));
   if (!market) return json({ error: "market inválido" }, 400);
   try {
-    return json({ items: await featured(market) }, 200, 3600);
+    const { items, fallback } = await featured(market);
+    return json({ items }, 200, fallback ? 60 : 3600);
   } catch (e) {
     console.error("featured failed", e);
     return json({ error: "fonte indisponível" }, 502);

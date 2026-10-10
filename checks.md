@@ -4,7 +4,7 @@ Escopo: `docs/prd-review.md`. Produção: https://assinar-ou-comprar.vercel.app
 
 | Requisito | Veredito | Evidência | Correção |
 |---|---|---|---|
-| Motor: comprar / assinar / assinar e manter, centavos inteiros | pass | `npm test` em `web/` → 31/31 (engine.test.ts, xbox.test.ts) | — |
+| Motor: comprar / assinar / assinar e manter, centavos inteiros | pass | `npm test` em `web/` → 37/37 (engine.test.ts, xbox.test.ts) | — |
 | Equilíbrio com desconto de assinante | pass | engine.test.ts "ponto de equilíbrio considera…"; no navegador BR: (1157,99 − 647,19)/76,90 = 6,6 → "até 6 meses" | — |
 | Preço desconhecido nunca vira 0; comparação parcial sem vencedor | pass | engine.test.ts; navegador: link com CoD BO6 → "⚠ Comparação parcial", sem "Mais barato" | — |
 | SKU de avaliação não vira preço | pass | 33 Immortals aparecia "Free"; corrigido em xbox.ts (`IsTrial`), teste com fixture real `trial-br.json`; agora R$ 72,95 | corrigido |
@@ -32,3 +32,7 @@ Escopo: `docs/prd-review.md`. Produção: https://assinar-ou-comprar.vercel.app
 | Retry após falha (Codex #7) | pass | App.tsx `failedKey` + botão "Tentar de novo" | corrigido |
 | Link inválido não apaga lista (Codex #9) | pass | store.test.ts + navegador: `?i=XXXXXXXXXXXX-invalid` manteve 2 itens | corrigido |
 | Foco do painel no celular (Codex #10) | pass | autoFocus no fechar, Escape, `inert` no fundo, foco volta ao botão | corrigido |
+| Jogos atuais na busca (feedback 2026-10-10) | pass | produção US: "gears of war" → E-Day 1º ($69.99); "halo" → Campaign Evolved 2º; "forza horizon" → FH6 1º; preview Vercel: 8/8 buscas via xbox.com, 0 fallbacks no log | busca via xbox.com |
+| Tela inicial com lançamentos | pass | /api/featured BR: E-Day, Fortnite, The Witcher 3 Remastered, College Football, Minecraft… | antes: ordem alfabética |
+| Páginas hub/upgrades fora dos resultados | pass | catalog.test.ts `tidyResults`; xbox.test.ts upgrades/demo | — |
+| Parser do HTML do xbox.com | pass | xbox.test.ts com fixture real `xbox-search-halo.html` (25 IDs) | — |

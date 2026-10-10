@@ -42,6 +42,10 @@ export async function getProducts(ids: string[], market: Market): Promise<Produc
 }
 
 const norm = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+/** O que pode vir depois do título-base para ser só outra edição do mesmo jogo. */
+const EDITION_SUFFIX =
+  /^(standard|deluxe|premium|ultimate|gold|definitive|complete|vault|cross gen|edição|edicao|edition|padrão|padrao|de luxo|suprema|definitiva|completa|cofre|\s)+$/;
+const isEditionOf = (title: string, base: string) => title !== base && title.startsWith(base + " ") && EDITION_SUFFIX.test(title.slice(base.length + 1));
 const sellable = (p: Product) => p.priceMinor !== null || Object.keys(p.includedIn).length > 0;
 
 /**
@@ -51,7 +55,7 @@ const sellable = (p: Product) => p.priceMinor !== null || Object.keys(p.included
 export function tidyResults(items: Product[]): Product[] {
   const sellableTitles = items.filter(sellable).map((p) => norm(p.title));
   const ok = items.filter(sellable);
-  const rest = items.filter((p) => !sellable(p) && !sellableTitles.some((t) => t !== norm(p.title) && t.startsWith(norm(p.title))));
+  const rest = items.filter((p) => !sellable(p) && !sellableTitles.some((t) => isEditionOf(t, norm(p.title))));
   return [...ok, ...rest];
 }
 
@@ -68,33 +72,37 @@ async function detailsInOrder(ids: string[], market: Market): Promise<Product[]>
   );
 }
 
-async function searchCached(query: string, market: Market): Promise<Product[]> {
+export type Listing = { items: Product[]; fallback: boolean };
+
+async function searchCached(query: string, market: Market): Promise<Listing> {
   "use cache: remote";
   const { ids, fallback } = await fetchSearchIds(query, market);
   // Resultado do fallback (só 10, sem lançamentos no topo) fica pouco tempo no cache.
   if (fallback) cacheLife("minutes");
   else cacheLife("hours");
-  return ids.length ? detailsInOrder(ids.slice(0, 25), market) : [];
+  return { items: ids.length ? await detailsInOrder(ids.slice(0, 25), market) : [], fallback };
 }
 
-export async function searchProducts(query: string, market: Market): Promise<Product[]> {
+export async function searchProducts(query: string, market: Market): Promise<Listing> {
   const q = query.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase().slice(0, 60);
-  if (q.length < 2) return [];
+  if (q.length < 2) return { items: [], fallback: false };
   return searchCached(q, market);
 }
 
 /** Estado vazio: o que está em alta no xbox.com agora (fallback: lista do Game Pass). */
-export async function featured(market: Market): Promise<Product[]> {
+export async function featured(market: Market): Promise<Listing> {
   "use cache: remote";
   let ids: string[] = [];
+  let fallback = false;
   try {
     ids = await fetchPopularIds(market);
   } catch (e) {
     console.error("destaques xbox.com falharam; usando lista do Game Pass", e);
   }
   if (ids.length === 0) {
+    fallback = true;
     cacheLife("minutes");
     ids = (await gamePassLists(market)).console.slice(0, 16);
   } else cacheLife("hours");
-  return (await detailsInOrder(ids.slice(0, 25), market)).slice(0, 12);
+  return { items: (await detailsInOrder(ids.slice(0, 25), market)).slice(0, 12), fallback };
 }

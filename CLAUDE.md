@@ -28,7 +28,7 @@ Não enfraqueça checks de aceitação para obter "pass". Não repita uma aborda
 - Edite só dentro do escopo e preserve trabalho existente.
 - **Pergunte antes** de publicar, deployar, enviar mensagens/e-mails ou gastar dinheiro. Antes de repetir uma escrita externa, verifique se a primeira tentativa já funcionou.
 - Contas e chaves deste projeto ficam **separadas** das do Archy e do Onde Foi (projeto Supabase próprio, projeto Vercel próprio). A conta Vercel do usuário (`gustavobburin-9893`) já está logada no CLI (`npx vercel`).
-- Endpoints da Microsoft (`displaycatalog.mp.microsoft.com`, `catalog.gamepass.com`) são **não documentados**: acesse com baixa frequência, só pelo job de sincronização ou cache do servidor, nunca a cada tecla nem direto do navegador.
+- Endpoints da Microsoft (`displaycatalog.mp.microsoft.com`, `catalog.gamepass.com` e o estado `__PRELOADED_STATE__` das páginas `xbox.com/{locale}/search/results/games` e `/games/browse`, usado para busca e destaques) são **não documentados**: acesse com baixa frequência, só pelo job de sincronização ou cache do servidor, nunca a cada tecla nem direto do navegador.
 
 ### Revisão (com o Codex CLI como parceiro)
 - O **Codex CLI** (`codex`, em `~/.local/bin/codex`) é parceiro de codificação e o **revisor separado** preferencial. Ex.:

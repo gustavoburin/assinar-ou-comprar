@@ -92,12 +92,17 @@ export function channelIdsFromHtml(html: string): string[] {
   if (marker < 0) throw new Error("xbox.com sem __PRELOADED_STATE__");
   const start = html.indexOf("{", marker);
   const state = JSON.parse(html.slice(start, jsonObjectEnd(html, start)));
-  const channels: Record<string, Raw> = state?.core2?.channels?.channelData ?? {};
-  for (const ch of Object.values(channels)) {
+  const channels = state?.core2?.channels?.channelData;
+  // Formato inesperado é erro (dispara o fallback), não "zero resultados".
+  if (!channels || typeof channels !== "object") throw new Error("xbox.com sem core2.channels.channelData");
+  for (const ch of Object.values(channels as Record<string, Raw>)) {
     const products: Raw[] = ch?.data?.products ?? [];
-    if (products.length) return products.map((p) => p.productId).filter((id: unknown) => typeof id === "string");
+    if (!products.length) continue;
+    const ids = products.map((p) => p?.productId).filter((id: unknown): id is string => typeof id === "string" && /^[0-9A-Z]{12}$/.test(id));
+    if (!ids.length) throw new Error("xbox.com: produtos sem productId válido");
+    return ids;
   }
-  return [];
+  return []; // canais presentes e vazios = busca sem resultados
 }
 
 /** O xbox.com às vezes devolve 5xx para servidores; tenta de novo antes de desistir. */
@@ -108,10 +113,17 @@ async function xboxComIds(path: string, market: Market, attempts = 3): Promise<s
     try {
       const res = await fetch(`https://www.xbox.com/${XBOX_LOCALE[market]}${path}`, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; assinar-ou-comprar)", Accept: "text/html", "Accept-Language": XBOX_LOCALE[market] },
+        signal: AbortSignal.timeout(8000),
       });
       if (res.status >= 500) throw new Error(`HTTP ${res.status} em xbox.com`);
       if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status} em xbox.com`), { final: true });
-      return channelIdsFromHtml(await res.text());
+      const html = await res.text();
+      try {
+        return channelIdsFromHtml(html);
+      } catch (e) {
+        // Erro de formato é determinístico: repetir não ajuda.
+        throw Object.assign(e as Error, { final: true });
+      }
     } catch (e) {
       last = e;
       if ((e as { final?: boolean }).final) break;
@@ -141,7 +153,7 @@ export async function fetchPopularIds(market: Market): Promise<string[]> {
 
 /** DLCs, pacotes de complementos, upgrades, moedas e demos não aparecem como jogo principal. */
 const NOT_A_GAME =
-  /\b(add-?ons?|complementos?|season pass|passe de temporada|expansion pass|passe de expans[aã]o|points|pontos|coins|moedas|currency|virtual|upgrade|atualiza[cç][aã]o d[ae]|voucher|demo)\b/i;
+  /\b(add-?ons?|complementos?|season pass|passe de temporada|expansion pass|passe de expans[aã]o|points|pontos|coins|moedas|currency|virtual|atualiza[cç][aã]o d[ae]|(?:edition|edição|premium|deluxe|ultimate|gold)\s+upgrade|upgrade\s+(?:pack|bundle)|voucher(?:\s+\d+)?$)\b|\bdemo$/i;
 
 export function isMainGame(raw: Raw): boolean {
   if (raw.ProductKind !== "Game") return false;

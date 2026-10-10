@@ -20,6 +20,7 @@
 - MVP construído: testes passando, lint/tsc/build ok, verificado no navegador (desktop, celular, BR→US, link compartilhado, comparação parcial).
 - Bug achado no navegador e corrigido: SKU de avaliação grátis virava preço 0 (33 Immortals).
 - Revisão do Codex sobre `web/`: 9 de 10 achados confirmados e corrigidos (ver `checks.md`); 31/31 testes; redeploy verificado em produção.
+- 2026-10-10 — feedback do usuário: jogos atuais (Gears of War: E-Day, Halo: Campaign Evolved, Forza Horizon 6) não apareciam. Causa: autosuggest da Microsoft limita a 10 resultados e a tela inicial era a lista do Game Pass em ordem alfabética. Correção: busca e destaques passam a usar a busca/“Procurar jogos” do xbox.com (até 25, por relevância, só jogos), com preços ainda do displaycatalog; páginas hub e upgrades escondidos; retry em 5xx e cache curto quando cai no fallback. Verificado em produção BR/US: E-Day 1º em "gears of war", Campaign Evolved 2º em "halo", FH6 1º em "forza horizon"; 37/37 testes.
 - Deploy de produção; CDN confirmou `x-vercel-cache: HIT` na 2ª busca.
 
 **Decisões:**
@@ -30,6 +31,8 @@
 **Pendências:**
 - Essential; histórico de preços (Supabase); Playwright E2E; revisão WCAG formal; SEO de páginas de jogo.
 - Heurística de DLC por título pode deixar passar casos.
+- Busca depende do HTML do xbox.com (formato pode mudar): fallback automático para autosuggest, log `busca xbox.com falhou`. Vale um alerta se o fallback ficar frequente.
+- "Forza Horizon Japan" não é título: o jogo se chama Forza Horizon 6 (busca por "forza horizon" acha).
 
 **Próxima ação:** testar com 3–5 pessoas reais; depois decidir entre (a) Supabase para histórico de preços, (b) Playwright E2E, (c) lista do Essential.
 

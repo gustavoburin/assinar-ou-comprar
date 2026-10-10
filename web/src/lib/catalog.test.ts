@@ -31,6 +31,16 @@ describe("tidyResults", () => {
     expect(out.map((x) => x.title)).toEqual(["Forza Horizon 5", "Forza Horizon 3"]);
   });
 
+  it("não esconde jogo distinto que só compartilha o começo do título (DOOM x DOOM Eternal)", () => {
+    const out = tidyResults([p("DOOM", null), p("DOOM Eternal", 9900)]);
+    expect(out.map((x) => x.title)).toEqual(["DOOM Eternal", "DOOM"]);
+  });
+
+  it("esconde hub quando a irmã é Edição Padrão / Cofre", () => {
+    const out = tidyResults([p("Call of Duty MW4", null), p("Call of Duty MW4 - Edição Cofre", 47990)]);
+    expect(out.map((x) => x.title)).toEqual(["Call of Duty MW4 - Edição Cofre"]);
+  });
+
   it("incluído no plano sem preço de venda continua na ordem original", () => {
     const out = tidyResults([p("A", null, true), p("B", 100)]);
     expect(out.map((x) => x.title)).toEqual(["A", "B"]);
