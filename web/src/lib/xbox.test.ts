@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import fixture from "./__fixtures__/products-br.json";
 import trialFixture from "./__fixtures__/trial-br.json";
-import { isMainGame, parseProduct } from "./xbox";
+import { readFileSync } from "node:fs";
+import { channelIdsFromHtml, isMainGame, parseProduct } from "./xbox";
 
 // Resposta real do displaycatalog (BR) salva em 2026-10-09: FH5 Padrão, FH5 Deluxe, CoD BO6 (Windows).
 const raws = fixture.Products;
@@ -57,5 +58,29 @@ describe("isMainGame", () => {
     expect(isMainGame(fake)).toBe(false);
     expect(isMainGame({ ProductKind: "Durable", LocalizedProperties: [{ ProductTitle: "X" }] })).toBe(false);
     expect(isMainGame(byId("9NKX70BBCDRN"))).toBe(true);
+  });
+});
+
+describe("channelIdsFromHtml (busca real do xbox.com por \"halo\", 2026-10-10)", () => {
+  const html = readFileSync(new URL("./__fixtures__/xbox-search-halo.html", import.meta.url), "utf8");
+
+  it("extrai os 25 jogos em ordem, com o remake Campaign Evolved no topo", () => {
+    const ids = channelIdsFromHtml(html);
+    expect(ids).toHaveLength(25);
+    expect(ids.slice(0, 3)).toContain("9N6J4RNFPKKL");
+  });
+
+  it("falha de forma explícita se o formato mudar", () => {
+    expect(() => channelIdsFromHtml("<html></html>")).toThrow();
+  });
+});
+
+describe("isMainGame: upgrades e vouchers", () => {
+  const g = (t: string) => ({ ProductKind: "Game", LocalizedProperties: [{ ProductTitle: t }] });
+  it("rejeita upgrade de edição, voucher e demo", () => {
+    expect(isMainGame(g("Forza Horizon 6 Premium Upgrade"))).toBe(false);
+    expect(isMainGame(g("Halo: Campaign Evolved - Atualização da Premium Edition"))).toBe(false);
+    expect(isMainGame(g("Halo Wars 2 Demo"))).toBe(false);
+    expect(isMainGame(g("Gears of War: E-Day Premium Edition"))).toBe(true);
   });
 });

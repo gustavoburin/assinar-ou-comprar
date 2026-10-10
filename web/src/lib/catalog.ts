@@ -4,7 +4,7 @@
  */
 import { cacheLife } from "next/cache";
 import type { Market, Product } from "./types";
-import { fetchGamePassLists, fetchRawProducts, fetchSuggestions, isMainGame, parseProduct, type GamePassLists } from "./xbox";
+import { fetchGamePassLists, fetchPopularIds, fetchRawProducts, fetchSearchIds, isMainGame, parseProduct, type GamePassLists } from "./xbox";
 
 export const MAX_IDS = 40;
 const ID_RE = /^[0-9A-Z]{12}$/;
@@ -41,14 +41,38 @@ export async function getProducts(ids: string[], market: Market): Promise<Produc
   return found.filter((p): p is Product => p !== null);
 }
 
+const norm = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const sellable = (p: Product) => p.priceMinor !== null || Object.keys(p.includedIn).length > 0;
+
+/**
+ * Página "hub" do xbox.com (ex.: "Forza Horizon 6" sem edição) não é vendida sozinha: some quando há uma edição
+ * vendável com o mesmo título nos resultados. Sem preço e sem plano, mas sem irmã (ex.: jogo removido da loja), vai para o fim.
+ */
+export function tidyResults(items: Product[]): Product[] {
+  const sellableTitles = items.filter(sellable).map((p) => norm(p.title));
+  const ok = items.filter(sellable);
+  const rest = items.filter((p) => !sellable(p) && !sellableTitles.some((t) => t !== norm(p.title) && t.startsWith(norm(p.title))));
+  return [...ok, ...rest];
+}
+
+/** Detalhes (preço, inclusão) na ordem dada, só jogos principais. */
+async function detailsInOrder(ids: string[], market: Market): Promise<Product[]> {
+  const [lists, raws] = await Promise.all([gamePassLists(market), fetchRawProducts(ids, market)]);
+  const verifiedAt = new Date().toISOString();
+  const byId = new Map(raws.filter(isMainGame).map((r) => [r.ProductId as string, r]));
+  return tidyResults(
+    ids.flatMap((id) => {
+      const r = byId.get(id);
+      return r ? [parseProduct(r, market, lists, verifiedAt)] : [];
+    }),
+  );
+}
+
 async function searchCached(query: string, market: Market): Promise<Product[]> {
   "use cache: remote";
   cacheLife("hours");
-  const ids = await fetchSuggestions(query, market);
-  if (ids.length === 0) return [];
-  const [lists, raws] = await Promise.all([gamePassLists(market), fetchRawProducts(ids.slice(0, 20), market)]);
-  const verifiedAt = new Date().toISOString();
-  return raws.filter(isMainGame).map((r) => parseProduct(r, market, lists, verifiedAt));
+  const ids = await fetchSearchIds(query, market);
+  return ids.length ? detailsInOrder(ids.slice(0, 25), market) : [];
 }
 
 export async function searchProducts(query: string, market: Market): Promise<Product[]> {
@@ -57,12 +81,16 @@ export async function searchProducts(query: string, market: Market): Promise<Pro
   return searchCached(q, market);
 }
 
-/** Atalhos do estado vazio: primeiros itens reais da lista de console do Game Pass. */
+/** Estado vazio: o que está em alta no xbox.com agora (fallback: lista do Game Pass). */
 export async function featured(market: Market): Promise<Product[]> {
   "use cache: remote";
   cacheLife("hours");
-  const lists = await gamePassLists(market);
-  const raws = await fetchRawProducts(lists.console.slice(0, 16), market);
-  const verifiedAt = new Date().toISOString();
-  return raws.filter(isMainGame).map((r) => parseProduct(r, market, lists, verifiedAt)).slice(0, 8);
+  let ids: string[] = [];
+  try {
+    ids = await fetchPopularIds(market);
+  } catch (e) {
+    console.error("destaques xbox.com falharam; usando lista do Game Pass", e);
+  }
+  if (ids.length === 0) ids = (await gamePassLists(market)).console.slice(0, 16);
+  return (await detailsInOrder(ids.slice(0, 25), market)).slice(0, 12);
 }

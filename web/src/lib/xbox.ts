@@ -66,9 +66,70 @@ export async function fetchSuggestions(query: string, market: Market): Promise<s
   return ids;
 }
 
-/** DLCs, pacotes de complementos e moedas não aparecem como jogo principal. */
+const XBOX_LOCALE: Record<Market, string> = { BR: "pt-BR", US: "en-US" };
+
+/** Índice logo após o objeto JSON que começa em `start` (o script continua com outro código depois). */
+function jsonObjectEnd(text: string, start: number): number {
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      if (c === "\\") i++;
+      else if (c === '"') inString = false;
+    } else if (c === '"') inString = true;
+    else if (c === "{" || c === "[") depth++;
+    else if (c === "}" || c === "]") {
+      if (--depth === 0) return i + 1;
+    }
+  }
+  throw new Error("JSON do xbox.com incompleto");
+}
+
+/** IDs (em ordem) do primeiro canal de produtos no estado que o xbox.com renderiza no servidor. */
+export function channelIdsFromHtml(html: string): string[] {
+  const marker = html.indexOf("window.__PRELOADED_STATE__");
+  if (marker < 0) throw new Error("xbox.com sem __PRELOADED_STATE__");
+  const start = html.indexOf("{", marker);
+  const state = JSON.parse(html.slice(start, jsonObjectEnd(html, start)));
+  const channels: Record<string, Raw> = state?.core2?.channels?.channelData ?? {};
+  for (const ch of Object.values(channels)) {
+    const products: Raw[] = ch?.data?.products ?? [];
+    if (products.length) return products.map((p) => p.productId).filter((id: unknown) => typeof id === "string");
+  }
+  return [];
+}
+
+async function xboxComIds(path: string, market: Market): Promise<string[]> {
+  const res = await fetch(`https://www.xbox.com/${XBOX_LOCALE[market]}${path}`, {
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; assinar-ou-comprar)", Accept: "text/html" },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} em xbox.com`);
+  return channelIdsFromHtml(await res.text());
+}
+
+/**
+ * Busca de jogos: a mesma do xbox.com (até 25, por relevância, já com lançamentos e só jogos).
+ * Se o xbox.com falhar ou mudar de formato, cai no autosuggest (limitado a 10).
+ */
+export async function fetchSearchIds(query: string, market: Market): Promise<string[]> {
+  try {
+    const ids = await xboxComIds(`/search/results/games?q=${encodeURIComponent(query)}`, market);
+    if (ids.length) return ids;
+  } catch (e) {
+    console.error("busca xbox.com falhou; usando autosuggest", e);
+  }
+  return fetchSuggestions(query, market);
+}
+
+/** Jogos em destaque agora (página "Procurar jogos" do xbox.com: mais vendidos/populares). */
+export async function fetchPopularIds(market: Market): Promise<string[]> {
+  return xboxComIds("/games/browse", market);
+}
+
+/** DLCs, pacotes de complementos, upgrades, moedas e demos não aparecem como jogo principal. */
 const NOT_A_GAME =
-  /\b(add-?ons?|complementos?|season pass|passe de temporada|expansion pass|passe de expans[aã]o|points|pontos|coins|moedas|currency|virtual)\b/i;
+  /\b(add-?ons?|complementos?|season pass|passe de temporada|expansion pass|passe de expans[aã]o|points|pontos|coins|moedas|currency|virtual|upgrade|atualiza[cç][aã]o d[ae]|voucher|demo)\b/i;
 
 export function isMainGame(raw: Raw): boolean {
   if (raw.ProductKind !== "Game") return false;
