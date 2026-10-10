@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   if (!market) return json({ error: "market inválido" }, 400);
   try {
     const items = await searchProducts(url.searchParams.get("q") ?? "", market);
-    return json({ items }, 200, 3600);
+    return json({ items }, 200, 600);
   } catch (e) {
     console.error("search failed", e);
     return json({ error: "fonte indisponível" }, 502);

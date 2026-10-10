@@ -100,26 +100,38 @@ export function channelIdsFromHtml(html: string): string[] {
   return [];
 }
 
-async function xboxComIds(path: string, market: Market): Promise<string[]> {
-  const res = await fetch(`https://www.xbox.com/${XBOX_LOCALE[market]}${path}`, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; assinar-ou-comprar)", Accept: "text/html" },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} em xbox.com`);
-  return channelIdsFromHtml(await res.text());
+/** O xbox.com às vezes devolve 5xx para servidores; tenta de novo antes de desistir. */
+async function xboxComIds(path: string, market: Market, attempts = 3): Promise<string[]> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 400 * i));
+    try {
+      const res = await fetch(`https://www.xbox.com/${XBOX_LOCALE[market]}${path}`, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; assinar-ou-comprar)", Accept: "text/html", "Accept-Language": XBOX_LOCALE[market] },
+      });
+      if (res.status >= 500) throw new Error(`HTTP ${res.status} em xbox.com`);
+      if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status} em xbox.com`), { final: true });
+      return channelIdsFromHtml(await res.text());
+    } catch (e) {
+      last = e;
+      if ((e as { final?: boolean }).final) break;
+    }
+  }
+  throw last;
 }
 
 /**
  * Busca de jogos: a mesma do xbox.com (até 25, por relevância, já com lançamentos e só jogos).
  * Se o xbox.com falhar ou mudar de formato, cai no autosuggest (limitado a 10).
  */
-export async function fetchSearchIds(query: string, market: Market): Promise<string[]> {
+export async function fetchSearchIds(query: string, market: Market): Promise<{ ids: string[]; fallback: boolean }> {
   try {
     const ids = await xboxComIds(`/search/results/games?q=${encodeURIComponent(query)}`, market);
-    if (ids.length) return ids;
+    return { ids, fallback: false };
   } catch (e) {
     console.error("busca xbox.com falhou; usando autosuggest", e);
   }
-  return fetchSuggestions(query, market);
+  return { ids: await fetchSuggestions(query, market), fallback: true };
 }
 
 /** Jogos em destaque agora (página "Procurar jogos" do xbox.com: mais vendidos/populares). */

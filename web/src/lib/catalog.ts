@@ -70,8 +70,10 @@ async function detailsInOrder(ids: string[], market: Market): Promise<Product[]>
 
 async function searchCached(query: string, market: Market): Promise<Product[]> {
   "use cache: remote";
-  cacheLife("hours");
-  const ids = await fetchSearchIds(query, market);
+  const { ids, fallback } = await fetchSearchIds(query, market);
+  // Resultado do fallback (só 10, sem lançamentos no topo) fica pouco tempo no cache.
+  if (fallback) cacheLife("minutes");
+  else cacheLife("hours");
   return ids.length ? detailsInOrder(ids.slice(0, 25), market) : [];
 }
 
@@ -84,13 +86,15 @@ export async function searchProducts(query: string, market: Market): Promise<Pro
 /** Estado vazio: o que está em alta no xbox.com agora (fallback: lista do Game Pass). */
 export async function featured(market: Market): Promise<Product[]> {
   "use cache: remote";
-  cacheLife("hours");
   let ids: string[] = [];
   try {
     ids = await fetchPopularIds(market);
   } catch (e) {
     console.error("destaques xbox.com falharam; usando lista do Game Pass", e);
   }
-  if (ids.length === 0) ids = (await gamePassLists(market)).console.slice(0, 16);
+  if (ids.length === 0) {
+    cacheLife("minutes");
+    ids = (await gamePassLists(market)).console.slice(0, 16);
+  } else cacheLife("hours");
   return (await detailsInOrder(ids.slice(0, 25), market)).slice(0, 12);
 }
