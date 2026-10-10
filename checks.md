@@ -4,7 +4,7 @@ Escopo: `docs/prd-review.md`. Produção: https://assinar-ou-comprar.vercel.app
 
 | Requisito | Veredito | Evidência | Correção |
 |---|---|---|---|
-| Motor: comprar / assinar / assinar e manter, centavos inteiros | pass | `npm test` em `web/` → 37/37 (engine.test.ts, xbox.test.ts) | — |
+| Motor: comprar / assinar / assinar e manter, centavos inteiros | pass | `npm test` em `web/` → 40/40 (engine.test.ts, xbox.test.ts) | — |
 | Equilíbrio com desconto de assinante | pass | engine.test.ts "ponto de equilíbrio considera…"; no navegador BR: (1157,99 − 647,19)/76,90 = 6,6 → "até 6 meses" | — |
 | Preço desconhecido nunca vira 0; comparação parcial sem vencedor | pass | engine.test.ts; navegador: link com CoD BO6 → "⚠ Comparação parcial", sem "Mais barato" | — |
 | SKU de avaliação não vira preço | pass | 33 Immortals aparecia "Free"; corrigido em xbox.ts (`IsTrial`), teste com fixture real `trial-br.json`; agora R$ 72,95 | corrigido |
@@ -36,3 +36,4 @@ Escopo: `docs/prd-review.md`. Produção: https://assinar-ou-comprar.vercel.app
 | Tela inicial com lançamentos | pass | /api/featured BR: E-Day, Fortnite, The Witcher 3 Remastered, College Football, Minecraft… | antes: ordem alfabética |
 | Páginas hub/upgrades fora dos resultados | pass | catalog.test.ts `tidyResults`; xbox.test.ts upgrades/demo | — |
 | Parser do HTML do xbox.com | pass | xbox.test.ts com fixture real `xbox-search-halo.html` (25 IDs) | — |
+| Revisão Codex da busca (2026-10-10) | pass | 5 achados, todos confirmados e corrigidos: formato inesperado do xbox.com → erro + fallback; hub só some se a irmã difere por sufixo de edição ("DOOM" volta a aparecer junto de "DOOM: The Dark Ages" no preview); CDN 60 s quando há fallback; timeout 8 s e retry só em 5xx/rede; filtro de DLC restrito a "<edição> Upgrade", "Voucher N", "… Demo" | 40/40 testes |
