@@ -2,7 +2,7 @@
 
 Especificação original: `game-pass-ou-comprar-prd.md` (gerada no ChatGPT; **não é lei**). Revisão crítica e escopo aceito: `docs/prd-review.md` — quando divergirem, vale a revisão. Idioma do produto e das conversas: pt-BR.
 
-Repositório git local (ainda sem remoto). Commit/push só quando o usuário pedir ou ao fechar uma etapa aceita; antes de mudanças arriscadas, um commit serve como versão recuperável.
+Repositório público em https://github.com/gustavoburin/assinar-ou-comprar (branch `main`). Commit/push só quando o usuário pedir ou ao fechar uma etapa aceita; antes de mudanças arriscadas, um commit serve como versão recuperável.
 
 ## Forma de trabalho (toda tarefa)
 
